@@ -1,1 +1,133 @@
-This is list of ccna1 commands
+Router Modes:
+Router>: User mode = Limited to basic monitoring commands
+Router#: Privileged mode (exec-level mode) = Provides access to all other router commands
+Router(config)#: global configuration mode = Commands that affect the entire system
+Router(config-if)#: interface mode = Commands that affect interfaces
+Router(config-subif)#: subinterface mode = Commands that affect subinterfaces
+Router(config-line)#: line mode = Commands that affect in lines modes (console, vty, aux…)
+Router(config-router)#: router configuration mode
+
+Changing switch hostname:
+Switch(config)# hostname SW1
+
+Configuring passwords:
+SW1(config)# enable secret cisco    ! MD5 hash
+SW1(config)# enable password notcisco    ! Clear text
+
+Securing console port:
+SW1(config)# line con 0
+SW1(config-line)# password cisco
+SW1(config-line)# login
+
+Securing terminal lines:
+SW1(config)# line vty 0 4
+SW1(config-line)# password cisco
+SW1(config-line)# login
+
+Encrypting passwords:
+SW1(config)# service password-encryption
+
+Configuring banners:
+SW1(config)# banner motd $
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+UNAUTHORIZED ACCESS IS PROHIBITED
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Giving the switch an IP address:
+SW1(config)# interface vlan 1
+SW1(config-if)# ip address 172.16.1.11 255.255.255.0    ! or DHCP
+SW1(config-if)# no shutdown
+
+Setting the default gateway:
+SW1(config)# ip default-gateway 172.16.1.1
+
+Saving configuration:
+SW1# copy running-config startup-config
+
+Destination filename [startup-config]?    ! Press enter to confirm file name.
+Building configuration…
+[OK]
+ 
+! Short for write memory.
+SW1# wr
+
+Building configuration…
+[OK]
+
+Working environment:
+name lookup, history, exec-timeout and logging behavior…, also valid for line con 0.
+
+SW1(config)# no ip domain-lookup
+SW1(config)# line vty 0 4
+SW1(config-line)# history size 15
+SW1(config-line)# exec-timeout 10 30
+SW1(config-line)# logging synchronous
+
+Configuring switch to use SSH:
+
+Configure DNS domain name:
+SW1(config)# ip domain-name example.com
+
+Configure a username and password:
+SW1(config)# username admin password cisco
+
+Generate encryption keys:
+The size of the key modulus in the range of 360 to 2048
+SW1(config)# crypto key generate rsa
+
+How many bits in the modulus [512]: 1024
+
+Define SSH version to use:
+SW1(config)# ip ssh version 2
+
+Enable vty lines to use SSH:
+SW1(config)# line vty 0 4
+SW1(config-line)# login local
+! You can set vty lines to use only telnet or only ssh or both as in the example.
+SW1(config-line)# transport input telnet ssh
+
+Aliases:
+Used to create shortcuts for long commands.
+SW1(config)# alias exec c configure terminal
+SW1(config)# alias exec s show ip interface brief
+SW1(config)# alias exec sr show running-config
+
+Description, speed and duplex:
+SW1(config)# interface fastEthernet 0/1
+SW1(config-if)# description LINK TO INTERNET ROUTER
+SW1(config-if)# speed 100    ! Options: 10, 100, auto
+! The range keyword used to set a group of interfaces at once.
+SW1(config)# interface range fastEthernet 0/5 – 10
+SW1(config-if-range)# duplex full (options: half, full, auto)
+
+Verify Basic Configuration:
+Shows information about the switch and its interfaces, RAM, NVRAM, flash, IOS, etc.
+
+SW1# show version
+
+Shows the current configuration file stored in DRAM.
+SW1# show running-config
+
+Shows the configuration file stored in NVRAM which is used at first boot process.
+SW1# show startup-config
+
+Lists the commands currently held in the history buffer.
+SW1# show history
+
+Shows an overview of all interfaces, their physical status, protocol status and ip address if assigned.
+SW1# show ip interface brief
+
+Shows detailed information about the specified interface, its status, protocol, duplex, speed, encapsulation, last 5 min traffic.
+SW1# show interface vlan 1
+
+Shows the description of all interfaces
+SW1# show interfaces description
+
+Shows the status of all interfaces like connected or not, speed, duplex, trunk or access vlan.1
+SW1# show interfaces status
+
+Shows the public encryption key used for SSH.
+SW1# show crypto key mypubkey rsa
+
+Shows information about the leased IP address (when an interface is configured to get IP address via a dhcp server)
+SW1# show dhcp lease
