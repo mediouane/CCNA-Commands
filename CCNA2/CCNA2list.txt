@@ -1,1 +1,289 @@
 
+This file includes IOS commands that are absolutely identical on both routers and switches, except the part of line aux 0 which is configured only on router because switches do not have an auxiliary port.
+
+Router(config)# hostname R1
+R1(config)# enable secret cisco
+R1(config)# line con 0
+R1(config-line)# password cisco
+R1(config-line)# login
+R1(config-line)# logging synchronous
+R1(config-line)# exec-timeout 30 0
+R1(config-line)# exit
+R1(config)# line vty 0 4
+R1(config-line)# password cisco
+R1(config-line)# login
+R1(config-line)# logging synchronous
+R1(config-line)# exec-timeout 30 0
+R1(config-line)# exit
+R1(config)# line aux 0
+R1(config-line)# password cisco
+R1(config-line)# login
+R1(config-line)# logging synchronous
+R1(config-line)# exec-timeout 30 0
+R1(config-line)# exit
+R1(config)# banner motd $
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+UNAUTHORIZED ACCESS IS PROHIBITED
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+$
+R1(config)# alias exec c configure terminal
+R1(config)# alias exec s show ip interface brief
+R1(config)# alias exec sr show running-config
+R1(config)# no ip domain-lookup
+R1(config)# service password-encryption
+R1(config)# ip domain-name example.com
+R1(config)# username admin password cisco
+R1(config)# crypto key generate rsa
+How many bits in the modulus [512]: 1024
+R1(config)# ip ssh version 2
+R1(config)# line vty 0 4
+R1(config-line)# login local
+R1(config-line)# transport input telnet ssh
+
+Configuring router interfaces:
+
+Clock rate is set only on the DCE side, typically the ISP side. On your router which is DTE you don’t need to set clocking.
+
+R1(config)# interface fastEthernet 0/0
+R1(config-if)# description LINK TO LOCAL LAN THROUGH SW1
+R1(config-if)# ip address 172.16.1.1 255.255.255.0
+R1(config-if)# no shutdown
+R1(config-if)# exit
+R1(config)# interface serial 0/1/0
+R1(config-if)# description WAN CONNECTION TO R2
+R1(config-if)# ip address 10.1.1.1 255.255.255.252
+R1(config-if)# clock rate 128000
+R1(config-if)# no shutdown
+
+Configuring Router-On-Stick for vlan routing:
+
+R1(config)# interface fastEthernet 0/0
+R1(config-if)# no shutdown
+R1(config)# interface fastEthernet 0/0.10
+R1(config-subif)# encapsulation dot1q 10
+R1(config-subif)# ip address 192.168.10.1 255.255.255.0
+R1(config-subif)# interface fastEthernet 0/0.20
+R1(config-subif)# encapsulation dot1q 20
+R1(config-subif)# ip address 192.168.20.1 255.255.255.0
+
+Static route:
+Using next hop:
+
+R1(config)# ip route 10.1.2.0 255.255.255.0 10.1.128.1
+
+Using exit interface:
+
+R1(config)# ip route 10.1.2.0 255.255.255.0 Serial 0/0
+*Note: Exit interface can be used in point-to-point serial links.
+Default Route:
+
+R1(config)# ip route 0.0.0.0 0.0.0.0 199.1.1.1
+
+
+RIPv2 Configuration:
+
+R1(config)# router rip
+R1(config-router)# version 2
+R1(config-router)# network 10.0.0.0    ! written as an original class A
+R1(config-router)# no auto-summary
+R1(config-router)# passive-interface serial 0/0
+
+RIPv2 Verification:
+Shows information about the running routing protocol process:
+
+R1# show ip protocols
+
+Shows the entire routing table:
+
+R1# show ip route
+
+Shows routes learned via RIP only:
+
+R1# show ip route rip
+
+Shows detailed information about the route to the specified destination network:
+
+R1# show ip route 10.1.1.1
+
+OSPF Configuration:
+
+Enter OSPF router configuration mode:
+
+R1(config)# router ospf 10    ! 10 = process ID
+
+Configure one or more network commands to identify which interfaces will run OSPF:
+
+R1(config-router)# network 10.0.0.0 0.255.255.255 area 0
+R1(config-router)# network 172.16.8.0 0.0.7.255 area 0
+R1(config-router)# network 192.168.1.254 0.0.0.0 area 1
+
+Configure router ID either (Optional):
+Using router-id ospf subcommand:
+
+R1(config-router)# router-id 1.1.1.1
+
+Configuring an IP address on a loopback interface:
+
+R1(config)# interface loopback 0
+R1(config-if)# ip address 1.1.1.1 255.255.255.255
+
+Change Hello and Dead intervals per interface (Optional):
+
+R1(config-if)# ip ospf hello-interval 2
+R1(config-if)# ip ospf dead-interval 6
+
+Impact routing choices by tuning interface cost using one of the following ways (Optional):
+
+Changing interface cost:
+
+R1(config-if)# ip ospf cost 55
+
+Changing interface bandwidth:
+
+R1(config-if)# bandwidth 128    ! in Kbps
+
+Changing the reference bandwidth that used by OSPF to calculate the cost:
+
+R1(config-router)# auto-cost reference-bandwidth 1000    ! in Mbps
+
+Disabling OSPF on a certain interface (Optional):
+
+R1(config-router)# passive-interface serial 0/0
+
+Configuring OSPF authentication (Optional):
+
+Type 0 authentication (none):
+
+R1(config-if)# ip ospf authentication null
+
+Type 1 authentication (clear text):
+
+R1(config-if)# ip ospf authentication
+R1(config-if)# ip ospf authentication-key cisco
+
+Type 2 authentication (md5):
+
+R1(config-if)# ip ospf authentication message-digest
+R1(config-if)# ip ospf message-digest-key 1 md5 cisco
+
+Configure maximum equal-cost paths (Optional):
+
+R1(config-router)# maximum paths 6
+
+OSPF verification:
+
+Shows information about the running routing protocol process:
+
+R1# show ip protocols
+
+Shows the entire routing table:
+
+R1# show ip route
+
+Shows routes learned via OSPF only:
+
+R1# show ip route ospf
+
+Shows all neighboring routers along with their respective adjacency state:
+
+R1# show ip ospf neighbors
+
+Shows all the information contained in the LSDB:
+
+R1# show ip ospf database
+
+Shows detailed information about OSPF running on a specific interface:
+
+R1# show ip ospf interfaces serial 0/0
+
+EIGRP Configuration:
+
+Enter EIGRP configuration mode and define AS number:
+
+R1(config)# router eigrp 121    ! 121 = AS number
+
+Configure one or more network commands to enable EIGRP on the specified interfaces:
+
+R1(config-router)# network 10.0.0.0
+R1(config-router)# network 172.16.0.0 0.0.3.255
+R1(config-router)# network 192.168.1.1 0.0.0.0
+R1(config-router)# network 0.0.0.0 255.255.255.255
+
+Disable auto summarization (Optional):
+
+R1(config-router)# no auto-summary
+
+Disable EIGRP on a specific interface (Optional):
+
+R1(config-router)# passive-interface serial 0/0
+
+Configure load balancing parameters (Optional):
+
+R1(config-router)# maximum-paths 6
+R1(config-router)# variance 4
+
+Change interface Hello and Hold timers (Optional):
+
+R1(config-if)# ip hello-interval eigrp 121 3
+R1(config-if)# ip hold-time eigrp 121 10
+
+Impacting metric calculations by tuning BW and delay of the interface (Optional):
+
+R1(config-if)# bandwidth 265    ! in Kbps)
+R1(config-if)# delay 120    ! tens of microseconds
+
+EIGRP Authentication:
+
+The key-string value and the mode must be the same on both routers. Lifetime options of the keys requires the clock of the routers to be set correctly, better use NTP, or it can cause problems
+
+Create an authentication key chain as follows:
+
+Create a key chain and give it a name:
+
+R1(config)# key chain MY_KEYS
+
+Create one or more keys giving them numbers:
+
+R1(config-keychain)# key 1
+
+Define the key value:
+
+R1(config-keychain-key)# key-string1stKEY
+
+Define the life time of the keys (optional):
+
+R1(config-keychain-key)# send-lifetime [start time] [end time]
+
+R1(config-keychain-key)# accept-lifetime [start time] [end time]
+
+Enable md5 authentication mode for EIGRP on the interface:
+
+R1(config-if)# ip authentication mode eigrp121 md5
+
+Refer to the correct key chain to be used on the interface:
+
+R1(config-if)# ip authentication key-chain eigrp121 MY_KEYS
+
+EIGRP Verification:
+
+Shows routes learned via EIGRP only:
+
+R1# show ip route eigrp
+
+Shows EIGRP neighbors and status:
+
+R1# show ip eigrp neighbors
+
+Shows EIGRP topology table, including successor and feasible successor:
+
+R1# show ip eigrp topology
+
+Shows interfaces that run EIGRP:
+
+R1# show ip eigrp interfaces
+
+Lists statistics on numbers of EIGRP messages sent and received by the router:
+
+R1# show ip eigrp traffic
+
+Enjoy !
