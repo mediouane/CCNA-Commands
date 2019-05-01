@@ -1,1 +1,178 @@
 
+PPP Configuration:
+
+R1(config)# interface serial 0/0
+R1(config-if)# encapsulation ppp
+
+PPP Authentication:
+
+CHAP:
+
+Configure the hostname:
+
+R1(config)# hostname ALPHA
+
+Configure the name of the other end router and the shared password:
+! The password used is shared password, that means it must be the same on both routers
+ALPHA(config)# username BETA password XYZ
+
+Enable CHAP authentication on the interface:
+
+ALPHA(config)# interface serial 0/0
+ALPHA(config-if)# ppp authentication chap
+
+PAP:
+
+Configure the hostname:
+R1(config)# hostname ALPHA
+
+Configure the name of the other end router and the shared password:
+ALPHA(config)# username BETA password XYZ
+
+Enable PAP authentication on the interface and define the username and password to be sent by PAP:
+ALPHA(config)# interface serial 0/0
+ALPHA(config-if)# ppp authentication pap
+ALPHA(config-if)# ppp pap sent-username ALPHA password XYZ
+
+PPP Verification and troubleshoot:
+
+Shows the encapsulation type and the control protocols of PPP:
+R1# show interface s0/0
+
+Useful for viewing the configuration of usernames and passwords used to authenticate PPP:
+R1# show running-config
+
+Displays the authentication process of PPP in real time:
+R1# debug ppp authentication
+
+Frame Relay:
+
+Schema:
+
+                            DLCI=201                        
+    DLCI=102                    |----------------R2
+R1 ---------FrameRelay----------|
+    DLCI=103                    |----------------R3
+                            DLCI=301
+
+
+Multipoint (one subnet)
+
+Give the interface an ip address and enable Frame Relay encapsulation:
+R1(config)# interface serial 0/0
+R1(config-if)# ip address 1.1.1.1 255.255.255.0
+R1(config-if)# encapsulation frame-relay (ietf)
+
+Configure LMI signaling type: (Optional as discussed with ISP):
+R1(config-if)# frame-relay lmi-type ansi    ! options: ansi, cisco, q933a
+
+Configure Frame Relay mapping:
+
+R1(config-if)# frame-relay map ip 1.1.1.2 102 broadcast (ietf)
+R1(config-if)# frame-relay map ip 1.1.1.3 103 broadcast
+R2(config)# interface serial 0/0
+R2(config-if)# ip address 1.1.1.2 255.255.255.0
+R2(config-if)# encapsulation frame-relay
+R2(config-if)# frame-relay map ip 1.1.1.1 201 broadcast
+R2(config-if)# frame-relay map ip 1.1.1.3 201 broadcast
+R3(config)# interface serial 0/0
+R3(config-if)# ip address 1.1.1.3 255.255.255.0
+R3(config-if)# encapsulation frame-relay
+R3(config-if)# frame-relay map ip 1.1.1.1 301 broadcast
+R3(config-if)# frame-relay map ip 1.1.1.2 301 broadcast
+
+Point-to-point (different subnets; one subnet per subinterface)
+
+Enable Frame Relay encapsulation:
+R1(config)# interface serial 0/0
+R1(config-if)# encapsulation frame-relay
+
+Give an ip address to a subinterface and configure its DLCI:
+R1(config)# interface serial 0/0.102 point-to-point
+R1(config-subif)# ip address 1.1.1.1 255.255.255.0
+R1(config-subif)# frame-relay interface-dlci 102
+R1(config)# interface serial 0/0.103 point-to-point
+R1(config-subif)# ip address 2.2.2.1 255.255.255.0
+R1(config-subif)# frame-relay interface-dlci 103
+R2(config)# interface serial 0/0
+R2(config-if)# encapsulation frame-relay
+R2(config)# interface serial 0/0.201 point-to-point
+R2(config-subif)# ip address 1.1.1.2 255.255.255.0
+R2(config-subif)# frame-relay interface-dlci 201
+R3(config)# interface serial 0/0
+R3(config-if)# encapsulation frame-relay
+R3(config)# interface serial 0/0.301 point-to-point
+R3(config-subif)# ip address 2.2.2.2 255.255.255.0
+R3(config-subif)# frame-relay interface-dlci 301
+
+Frame Relay Verification and troubleshoot:
+
+Shows the encapsulation type:
+R1# show interfaces serial 0/0
+
+Lists PVC status information:
+R1# show frame-relay pvc
+
+Lists DLCI to IP mapping:
+R1# show frame-relay map
+
+Lists LMI status information:
+R1# show frame-relay lmi
+
+Displays the content of LMI messages:
+R1# debug frame-relay lmi
+
+Lists messages about certain Frame Relay events, including Inverse ARP messaeges:
+R1# debug frame-relay events
+
+Network Address Translation (NAT):
+Static NAT:
+Define the outside and inside interfaces:
+R1(config)# interface serial 0/0
+R1(config-if)# ip nat outside
+R1(config)# interface FastEthernet 1/1
+R1(config-if)# ip nat inside
+
+Configure static NAT statement:
+R1(config)# ip nat inside source static 192.168.1.10 200.1.1.1
+
+Dynamic NAT:
+
+Define the outside and inside interfaces
+
+Create an ACL that determines the IP addresses thatare allowed to be translated:
+R1(config)# access-list 3 permit 192.168.1.0 0.0.0.255
+
+Create a pool of public IP addresses:
+R1(config)# ip nat pool PUB 200.1.1.1 200.1.1.6 netmask 255.255.255.248
+
+Configure NAT statement:
+
+R1(config)# ip nat inside source list 3 pool PUB</pre>
+<h4>NAT Overload (PAT):</h4>
+<ul>
+    <li>The same as dynamic NAT with the use of the overload keyword at the end of NAT statement:</li>
+</ul>
+<pre>
+R1(config)# ip nat inside source list 3 pool PUB overload
+
+NAT verification and troubleshoot:
+
+Useful in viewing the configuration of NAT pool and the inside and outside interfaces:
+R1# show running-config
+
+Displays access lists, including the one used for NAT:
+R1# show access-lists
+
+Shows counters for packets and NAT table entries, as well as basic configuration information:
+R1# show ip nat stasitics
+
+Displays the NAT table:
+R1# show ip nat translations
+
+Clears all the dynamic entries in the NAT table:
+R1# clear ip nat translations *
+
+Issues a log message describing each packet whose ip address is translated with NAT:
+R1# debug ip nat
+Enjoy !
